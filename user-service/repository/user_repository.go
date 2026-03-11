@@ -251,7 +251,7 @@ func (u *userRepository) GetUserByRoleName(ctx context.Context, roleName string)
 func (u *userRepository) GetUserRoleByID(ctx context.Context, assignRoleID uint) (*model.UserRole, error) {
 	select {
 	case <-ctx.Done():
-		log.Errorf("[UserRepository] DeleteUser -1: %v", ctx.Err())
+		log.Errorf("[UserRepository] GetUserRoleByID -1: %v", ctx.Err())
 		return nil, ctx.Err()
 	default:
 	}

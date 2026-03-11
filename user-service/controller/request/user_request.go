@@ -14,7 +14,7 @@ type CreateUserRequest struct {
 }
 
 type GetAllUsersRequest struct {
-	Page      int    `query:"page" validate:"required,min=1"`
+	Page      int    `query:"page"`
 	Limit     int    `query:"limit" validate:"omitempty,min=1,max=100"`
 	Search    string `query:"search" validate:"omitempty"`
 	SortBy    string `query:"sort_by" validate:"omitempty,oneof=name email created_at"`
