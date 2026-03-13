@@ -88,13 +88,13 @@ func (c *categoryRepository) GetAllCategories(ctx context.Context, page int, lim
 
 		var totalRecords int64
 		if err := query.Count(&totalRecords).Error; err != nil {
-			log.Errorf("[Repository] GetAllCategories - 2: Failed to count categories: %v", err)
+			log.Errorf("[CategoryRepository] GetAllCategories - 2: Failed to count categories: %v", err)
 			return nil, 0, err
 		}
 
 		var modelCategories []model.Category
 		if err := query.Order(sortBy + " " + sortOrder).WithContext(ctx).Preload("Products").Offset(offset).Limit(limit).Find(&modelCategories).Error; err != nil {
-			log.Errorf("[Repository] GetAllCategories - 3: Failed to get all categories: %v", err)
+			log.Errorf("[CategoryRepository] GetAllCategories - 3: Failed to get all categories: %v", err)
 			return nil, 0, err
 		}
 
