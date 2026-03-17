@@ -11,7 +11,7 @@ type ProductResponse struct {
 	CategoryID       uint `json:"category_id"`
 	Thumbnail       string `json:"thumbanil"`
 	IsPopular       bool `json:"is_popular"`
-	Category       CategoryRsponse `json:"category"`
+	Category       CategoryResponse `json:"category"`
 }
 
 type GetAllProductResponse struct {

@@ -2,7 +2,7 @@ package response
 
 import "micro-warehouse/product-service/pkg/pagination"
 
-type CategoryRsponse struct {
+type CategoryResponse struct {
 	ID         uint   `json:"id"`
 	Name       string `json:"name"`
 	Tagline       string `json:"tagline"`
@@ -11,6 +11,6 @@ type CategoryRsponse struct {
 }
 
 type GetAllCategoriResponse struct {
-	Categories  []CategoryRsponse           `json:"categories"`
+	Categories  []CategoryResponse           `json:"categories"`
 	Pagination pagination.PaginationResponse `json:"pagination"`
 }
