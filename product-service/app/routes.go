@@ -6,6 +6,7 @@ func SetupRoutes(app *fiber.App, container *Container) {
 	api := app.Group("/api/v1")
 	categories := api.Group("/categories")
 	products := api.Group("/products")
+	uploads := api.Group("/upload")
 	
 	categories.Post("/", container.CategoryController.CreateCategory)
 	categories.Get("/", container.CategoryController.GetAllCategories)
@@ -20,4 +21,6 @@ func SetupRoutes(app *fiber.App, container *Container) {
 	products.Put("/:id", container.ProductController.UpdateProduct)
 	products.Delete("/:id", container.ProductController.DeleteProduct)
 
+	uploads.Post("/product-image", container.UploadController.UploadProductImage)
+	uploads.Post("/category-image", container.UploadController.UploadCategoryImage)
 }
