@@ -40,7 +40,7 @@ func (c *categoryUsecase) GetCategoryByID(ctx context.Context, id uint) (*model.
 
 // UpdateCategory implements CategoryUsecaseInterface.
 func (c *categoryUsecase) UpdateCategory(ctx context.Context, category *model.Category) error {
-	return c.categoryRepo.CreateCategory(ctx, category)
+	return c.categoryRepo.UpdateCategory(ctx, category)
 }
 
 func NewCategoryUsecase(categoryRepo repository.CategoryRepositoryInterface) CategoryUsecaseInterface {

@@ -121,6 +121,12 @@ func (p *productController) GetAllProducts(ctx *fiber.Ctx) error {
 			About: product.About,
 			Price: int(product.Price),
 			IsPopular: product.IsPopular,
+			Category: response.CategoryResponse{
+				ID: product.Category.ID,
+				Name: product.Category.Name,
+				Tagline: product.Category.Tagline,
+				Photo: product.Category.Photo,
+			},
 		})
 	}
 

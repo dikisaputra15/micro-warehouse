@@ -3,11 +3,11 @@ package request
 type CreateProductRequets struct {
 	Name string `json:"name" validate:"required"`
 	Barcode string `json:"barcode" validate:"required"`
-	Price uint `json:"price" validate:"required"`
+	Price float64 `json:"price" validate:"required"`
 	About string `json:"about" validate:"required"`
 	CategoryID uint `json:"category_id" validate:"required"`
 	Thumbnail string `json:"thumbnail" validate:"required"`
-	IsPopular bool `json:"is_popular" validate:"required"`
+	IsPopular bool `json:"is_popular"`
 }
 
 type GetAllProductRequest struct {
