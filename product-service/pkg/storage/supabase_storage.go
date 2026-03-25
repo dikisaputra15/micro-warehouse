@@ -35,7 +35,7 @@ func (s *SupabaseStorage) UploadFile(ctx context.Context, file *multipart.FileHe
 
 	filePath := fmt.Sprintf("%s/%s", folder, filename)
 
-	contentType := file.Header.Get("content-Type")
+	contentType := file.Header.Get("Content-Type")
 	if contentType == "" {
 		switch strings.ToLower(ext) {
 		case ".jpg", ".jpeg":
@@ -52,7 +52,7 @@ func (s *SupabaseStorage) UploadFile(ctx context.Context, file *multipart.FileHe
 	}
 
 	client := storage_go.NewClient(s.cfg.Supabase.URL, s.cfg.Supabase.Key, map[string]string{
-		"contentType": contentType,
+		"Content-Type": contentType,
 	})
 
 	_, err = client.UploadFile(s.cfg.Supabase.Bucket, filePath, src)
