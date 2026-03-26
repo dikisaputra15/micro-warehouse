@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MaxImageSize = 2 * 1024 * 1024
+	MaxImageSize = 5 * 1024 * 1024
 
 	AllowedImageExtensions = ".jpg,.jpeg,.png,.webp,.svg"
 )

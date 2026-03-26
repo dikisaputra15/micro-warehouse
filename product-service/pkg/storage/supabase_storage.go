@@ -1,12 +1,13 @@
 package storage
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"micro-warehouse/product-service/configs"
 	"mime/multipart"
 	"path/filepath"
-	"strings"
 	"time"
 
 	storage_go "github.com/supabase-community/storage-go"
@@ -29,42 +30,47 @@ func (s *SupabaseStorage) UploadFile(ctx context.Context, file *multipart.FileHe
 	}
 	defer src.Close()
 
+	// generate filename
 	ext := filepath.Ext(file.Filename)
 	timestamp := time.Now().Unix()
-	filename := fmt.Sprintf("%s_%d%s", strings.TrimSuffix(file.Filename, ext), timestamp, ext)
+	filename := fmt.Sprintf("%d%s", timestamp, ext)
 
 	filePath := fmt.Sprintf("%s/%s", folder, filename)
 
+	// detect content type
 	contentType := file.Header.Get("Content-Type")
 	if contentType == "" {
-		switch strings.ToLower(ext) {
-		case ".jpg", ".jpeg":
-			contentType = "image/jpeg"
-		case ".png":
-			contentType = "image/png"
-		case ".webp":
-			contentType = "image/webp"
-		case ".svg":
-			contentType = "image/svg+xml"
-		default:
-			contentType = "application/octet-stream"
-		}
+		contentType = "application/octet-stream"
 	}
 
-	client := storage_go.NewClient(s.cfg.Supabase.URL, s.cfg.Supabase.Key, map[string]string{
-		"Content-Type": contentType,
-	})
-
-	_, err = client.UploadFile(s.cfg.Supabase.Bucket, filePath, src)
+	// 🔥 FIX PENTING: convert ke bytes
+	fileBytes, err := io.ReadAll(src)
 	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// 🔥 FIX PENTING: pakai FileOptions
+	upsert := true
+	_, err = s.client.UploadFile(
+		s.cfg.Supabase.Bucket,
+		filePath,
+		bytes.NewReader(fileBytes),
+		storage_go.FileOptions{
+			ContentType: &contentType,
+			Upsert:      &upsert,
+		},
+	)
+	if err != nil {
+		fmt.Printf("UPLOAD ERROR DETAIL: %+v\n", err)
 		return nil, fmt.Errorf("failed to upload file to supabase: %w", err)
 	}
 
-	publicUrl := client.GetPublicUrl(s.cfg.Supabase.Bucket, filePath)
+	// 🔥 FIX URL
+	publicUrl := s.client.GetPublicUrl(s.cfg.Supabase.Bucket, filePath)
 
 	return &UploadResult{
-		URL: publicUrl.SignedURL,
-		Path: filePath,
+		URL:      publicUrl.SignedURL,
+		Path:     filePath,
 		Filename: filename,
 	}, nil
 }
