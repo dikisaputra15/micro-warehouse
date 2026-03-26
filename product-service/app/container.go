@@ -32,7 +32,7 @@ func BuildContainer() *Container {
 	productController := controller.NewProductController(productUsecase)
 
 	supabaseStorage := storage.NewSupabaseStorage(*config)
-	fileUploadHelper := storage.NewFileUploadHelper(supabaseStorage, *config)
+	fileUploadHelper := storage.NewFileUploadHelper(supabaseStorage)
 	uploadController := controller.NewUploadController(fileUploadHelper)
 
 	return &Container{
