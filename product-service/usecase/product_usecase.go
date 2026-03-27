@@ -2,8 +2,12 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"micro-warehouse/product-service/model"
+	"micro-warehouse/product-service/pkg/httpclient"
 	"micro-warehouse/product-service/repository"
+
+	"github.com/gofiber/fiber/v2/log"
 )
 
 type ProductUsecaseInterface interface {
@@ -17,6 +21,8 @@ type ProductUsecaseInterface interface {
 
 type productUsecase struct {
 	productRepo repository.ProductRepositoryInterface
+	warehouseClient *httpclient.WarehouseClient
+	merchantClient *httpclient.MerchantClient
 }
 
 // CreateProduct implements ProductUsecaseInterface.
@@ -26,6 +32,38 @@ func (p *productUsecase) CreateProduct(ctx context.Context, product *model.Produ
 
 // DeleteProduct implements ProductUsecaseInterface.
 func (p *productUsecase) DeleteProduct(ctx context.Context, id uint) error {
+	warehouseStock, err := p.warehouseClient.GetProductStockAcrossWarehouses(ctx, id)
+	if err != nil {
+		log.Errorf("[DeleteProduct] Failed to check warehouse stock for product %d", id)
+		return err
+	}
+
+	if warehouseStock > 0 {
+		log.Errorf("[DeleteProduct] Product %d has stock in warehouse", id)
+		return errors.New("product has stock in warehouse")
+	}
+
+	merchantStock, err := p.merchantClient.GetProductStockAcrossMerchants(ctx, id)
+	if err != nil {
+		log.Errorf("[DeleteProduct] Failed to check merchant stock for product %d", id)
+		return err
+	}
+
+	if merchantStock > 0 {
+		log.Errorf("[DeleteProduct] Product %d has stock in merchanat", id)
+		return errors.New("product has stock in merchant")
+	}
+
+	if err := p.merchantClient.DeleteAllProductMerchantProducts(ctx, id); err != nil {
+		log.Errorf("[DeleteProduct] Failed to delete all merchant product for product %d", id)
+		return err
+	}
+
+	if err := p.warehouseClient.DeleteAllProductWarehouseProducts(ctx, id); err != nil {
+		log.Errorf("[DeleteProduct] Failed to delete all warehouse product for product %d", id)
+		return err
+	}
+
 	return p.productRepo.DeleteProduct(ctx, id)
 }
 
