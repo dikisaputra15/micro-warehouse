@@ -9,7 +9,7 @@ import (
 	"micro-warehouse/warehouse-service/pkg/validator"
 	"micro-warehouse/warehouse-service/usecase"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -160,27 +160,162 @@ func (w *warehouseProductController) GetDetailWarehouse(c *fiber.Ctx) error {
 
 // GetDetailWarehouseProductByID implements WarehouseProductControllerInterface.
 func (w *warehouseProductController) GetDetailWarehouseProductByID(c *fiber.Ctx) error {
-	panic("unimplemented")
+	ctx := c.Context()
+	warehouseProductID := c.Params("warehouse_product_id")
+	warehouseProductIDUint := conv.StringToUint(warehouseProductID)
+
+	warehouseProduct, product, err := w.warehouseProductUsecase.GetDetailWarehouseProductByID(ctx, warehouseProductIDUint)
+	if err != nil {
+		log.Errorf("[WarehouseProductController] GetDetailWarehouseProductByID - 1: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get detail warehouse product by id",
+		})
+	}
+
+	respWarehouseProduct := response.GetDetailWarehouseProductByIDResponse {
+		ID: warehouseProduct.ID,
+		WarehouseID: warehouseProduct.WarehouseID,
+		ProductID: warehouseProduct.ProductID,
+		Stock: warehouseProduct.Stock,
+		WarehouseName: warehouseProduct.Warehouse.Name,
+		WarehousePhoto: warehouseProduct.Warehouse.Photo,
+		WarehousePhone: warehouseProduct.Warehouse.Phone,
+		ProductName: product.Name,
+		ProductBarcode: product.Barcode,
+		ProductPrice: int(product.Price),
+		ProductAbout: product.About,
+		ProductThumbnail: product.Thumbnail,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": respWarehouseProduct,
+		"message": "Warehouse product fetched successfully",
+	})
 }
 
 // GetProductTotalStock implements WarehouseProductControllerInterface.
 func (w *warehouseProductController) GetProductTotalStock(c *fiber.Ctx) error {
-	panic("unimplemented")
+	ctx := c.Context()
+	productID := c.Params("product_id")
+	productIDUint := conv.StringToUint(productID)
+
+	totalStock, err := w.warehouseProductUsecase.GetProductTotalStock(ctx, productIDUint)
+	if err != nil {
+		log.Errorf("[WarehouseProductController] GetProductTotalStock - 1: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get product total stock",
+		})
+	}
+
+	resp := response.ProductTotalStockResponse{
+		ProductID: productIDUint,
+		TotalStock: totalStock,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": resp,
+		"message": "Product total stock fetched successfully",
+	})
 }
 
 // GetWarehouseProductByProductID implements WarehouseProductControllerInterface.
 func (w *warehouseProductController) GetWarehouseProductByProductID(c *fiber.Ctx) error {
-	panic("unimplemented")
+	ctx := c.Context()
+	productID := c.Params("product_id")
+	productIDUint := conv.StringToUint(productID)
+
+	warehouseProducts, err := w.warehouseProductUsecase.GetWarehouseProductByProductID(ctx, productIDUint)
+	if err != nil {
+		log.Errorf("[WarehouseProductController] GetWarehouseProductByProductID - 1: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get warehouse product by product id",
+		})
+	}
+
+	resps := []response.WarehouseResponse{}
+	for _, wp := range warehouseProducts {
+		resps = append(resps, response.WarehouseResponse{
+			ID: wp.WarehouseID,
+			Name: wp.Warehouse.Name,
+			Address: wp.Warehouse.Address,
+			Photo: wp.Warehouse.Photo,
+			Phone: wp.Warehouse.Phone,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": resps,
+		"message": "Warehouse products fethced successfully",
+	})
 }
 
 // GetWarehouseProductByWarehouseIDAndProductID implements WarehouseProductControllerInterface.
 func (w *warehouseProductController) GetWarehouseProductByWarehouseIDAndProductID(c *fiber.Ctx) error {
-	panic("unimplemented")
+	ctx := c.Context()
+	warehouseID := c.Params("warehouse_id")
+	warehouseIDUint := conv.StringToUint(warehouseID)
+	productID := c.Params("product_id")
+	productIDUint := conv.StringToUint(productID)
+
+	warehouseProduct, err := w.warehouseProductUsecase.GetWarehouseProductByWarehouseIDAndProductID(ctx, warehouseIDUint, productIDUint)
+	if err != nil {
+		log.Errorf("[WarehouseProductController] GetWarehouseProductByWarehouseIDAndProductID - 1: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to get warehouse product by warehouse id and product id",
+		})
+	}
+
+	respWarehouseProduct := response.WarehouseProductResponse{
+		ID: warehouseProduct.ID,
+		WarehouseID: warehouseProduct.WarehouseID,
+		ProductID: warehouseProduct.ProductID,
+		Stock: warehouseProduct.Stock,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"data": respWarehouseProduct,
+		"message": "Warehouse products fethced successfully",
+	})
 }
 
 // UpdateWarehouseProduct implements WarehouseProductControllerInterface.
 func (w *warehouseProductController) UpdateWarehouseProduct(c *fiber.Ctx) error {
-	panic("unimplemented")
+	ctx := c.Context()
+	warehouseProductID := c.Params("warehouse_product_id")
+	warehouseProductIDUint := conv.StringToUint(warehouseProductID)
+
+	var req request.CreateWarehouseProductRequest
+	if err := c.BodyParser(&req); err != nil {
+		log.Errorf("[WarehouseProductController] UpdateWarehouseProduct -1: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid request body",
+		})
+	}
+
+	if err := validator.Validate(req); err != nil {
+		log.Errorf("[WarehouseProductController] UpdateWarehouseProduct -2: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
+
+	reqModel := model.WarehouseProduct{
+		ID: warehouseProductIDUint,
+		WarehouseID: req.WarehouseID,
+		ProductID: req.ProductID,
+		Stock: req.Stock,
+	}
+
+	if err := w.warehouseProductUsecase.UpdateWarehouseProduct(ctx, &reqModel); err != nil {
+		log.Errorf("[WarehouseController] UpdateWarehouse -3: %v", err)
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update warehouse product",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Warehouse product updated successfully",
+	})
 }
 
 func NewWarehouseProductController(warehouseProductUsecase usecase.WarehouseProductUsecaseInterface) WarehouseProductControllerInterface {

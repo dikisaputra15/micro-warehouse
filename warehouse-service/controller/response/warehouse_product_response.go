@@ -25,6 +25,7 @@ type GetDetailWarehouseProductByIDResponse struct {
 	ProductName      string `json:"product_name"`
 	ProductBarcode   string `json:"product_barcode"`
 	ProductPrice     int    `json:"product_price"`
+	ProductAbout     string `json:"product_about"`
 	ProductThumbnail string `json:"product_thumbnail"`
 }
 

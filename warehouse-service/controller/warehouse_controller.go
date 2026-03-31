@@ -9,7 +9,7 @@ import (
 	"micro-warehouse/warehouse-service/pkg/validator"
 	"micro-warehouse/warehouse-service/usecase"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 )
 
@@ -21,12 +21,12 @@ type WarehouseControllerInterface interface {
 	DeleteWarehouse(ctx *fiber.Ctx) error
 }
 
-type warehouseController struct {
+type WarehouseController struct {
 	warehouseUsecase usecase.WarehouseUsecaseInterface
 }
 
 // CreateWarehouse implements WarehouseControllerInterface.
-func (w *warehouseController) CreateWarehouse(ctx *fiber.Ctx) error {
+func (w *WarehouseController) CreateWarehouse(ctx *fiber.Ctx) error {
 	var req request.CreateWarehouseRequest
 	
 	if err := ctx.BodyParser(&req); err != nil {
@@ -63,7 +63,7 @@ func (w *warehouseController) CreateWarehouse(ctx *fiber.Ctx) error {
 }
 
 // DeleteWarehouse implements WarehouseControllerInterface.
-func (w *warehouseController) DeleteWarehouse(ctx *fiber.Ctx) error {
+func (w *WarehouseController) DeleteWarehouse(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	warehouseID := conv.StringToUint(id)
 	
@@ -80,7 +80,7 @@ func (w *warehouseController) DeleteWarehouse(ctx *fiber.Ctx) error {
 }
 
 // GetAllWarehouse implements WarehouseControllerInterface.
-func (w *warehouseController) GetAllWarehouse(ctx *fiber.Ctx) error {
+func (w *WarehouseController) GetAllWarehouse(ctx *fiber.Ctx) error {
 	var req request.GetAllWarehouseRequest
 	if err := ctx.QueryParser(&req); err != nil {
 		log.Errorf("[WarehouseController] GetAllWarehouse - 1: %v", err)
@@ -137,7 +137,7 @@ func (w *warehouseController) GetAllWarehouse(ctx *fiber.Ctx) error {
 }
 
 // GetWarehouseByID implements WarehouseControllerInterface.
-func (w *warehouseController) GetWarehouseByID(ctx *fiber.Ctx) error {
+func (w *WarehouseController) GetWarehouseByID(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
 	warehouseID := conv.StringToUint(id)
@@ -174,7 +174,7 @@ func (w *warehouseController) GetWarehouseByID(ctx *fiber.Ctx) error {
 }
 
 // UpdateWarehouse implements WarehouseControllerInterface.
-func (w *warehouseController) UpdateWarehouse(ctx *fiber.Ctx) error {
+func (w *WarehouseController) UpdateWarehouse(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 	warehouseID := conv.StringToUint(id)
 
@@ -215,7 +215,7 @@ func (w *warehouseController) UpdateWarehouse(ctx *fiber.Ctx) error {
 }
 
 func NewWarehouseController(warehouseUsecase usecase.WarehouseUsecaseInterface) WarehouseControllerInterface {
-	return &warehouseController{
+	return &WarehouseController{
 		warehouseUsecase: warehouseUsecase,
 	}
 }
