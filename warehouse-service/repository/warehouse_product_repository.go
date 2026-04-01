@@ -77,7 +77,7 @@ func (w *warehouseProductRepository) GetDetailWarehouse(ctx context.Context, war
 		return nil, ctx.Err()
 	default:
 		var warehouse model.Warehouse
-		if err := w.db.WithContext(ctx).Where("id = ?", warehouseID).Select("id", "name", "photo", "phone").Preload("WarehouseProducts").First("&warehouse").Error; err != nil {
+		if err := w.db.WithContext(ctx).Where("id = ?", warehouseID).Select("id", "name", "address", "photo", "phone").Preload("WarehouseProducts").First(&warehouse).Error; err != nil {
 			log.Errorf("[WarehouseProductRepository] GetDetailWarehouse - 2: %v", err)
 			return nil, err
 		}
@@ -94,7 +94,7 @@ func (w *warehouseProductRepository) GetDetailWarehouseProductByID(ctx context.C
 		return nil, ctx.Err()
 	default:
 		var warehouseProduct model.WarehouseProduct
-		if err := w.db.WithContext(ctx).Where("id = ?", warehouseProductID).Select("id", "product_id", "stock", "warehouse_id").Preload("Warehouse").First("&warehouseProduct").Error; err != nil {
+		if err := w.db.WithContext(ctx).Where("id = ?", warehouseProductID).Select("id", "product_id", "stock", "warehouse_id").Preload("Warehouse").First(&warehouseProduct).Error; err != nil {
 			log.Errorf("[WarehouseProductRepository] GetDetailWarehouseProductByID - 2: %v", err)
 			return nil, err
 		}
@@ -128,7 +128,7 @@ func (w *warehouseProductRepository) GetWarehouseProductByProductID(ctx context.
 		return nil, ctx.Err()
 	default:
 		var warehouseProducts []model.WarehouseProduct
-		if err := w.db.WithContext(ctx).Where("product_id = ?", productID).Preload("Warehouse").Find("&warehouseProducts").Error; err != nil {
+		if err := w.db.WithContext(ctx).Where("product_id = ?", productID).Preload("Warehouse").Find(&warehouseProducts).Error; err != nil {
 			log.Errorf("[WarehouseProductRepository] GetWarehouseProductByProductID - 2: %v", err)
 			return nil, err
 		}
@@ -158,20 +158,27 @@ func (w *warehouseProductRepository) GetWarehouseProductByWarehouseIDAndProductI
 func (w *warehouseProductRepository) UpdateWarehouseProduct(ctx context.Context, warehouseProduct *model.WarehouseProduct) error {
 	select {
 	case <-ctx.Done():
-		log.Errorf("[WarehouseProductRepository] UpdateWarehouseProduct - 1: %v", ctx.Err())
 		return ctx.Err()
 	default:
-		existingWarehouseProduct := model.WarehouseProduct{}
-		if err := w.db.WithContext(ctx).Where("id = ?", warehouseProduct.ID).First(&existingWarehouseProduct).Error; err != nil {
-			log.Errorf("[WarehouseProductRepository] UpdateWarehouseProduct - 2: %v", err)
-			return err
+		updateData := map[string]interface{}{}
+
+		if warehouseProduct.Stock != 0 {
+			updateData["stock"] = warehouseProduct.Stock
 		}
 
-		existingWarehouseProduct.Stock = warehouseProduct.Stock
-		existingWarehouseProduct.WarehouseID = warehouseProduct.WarehouseID
-		existingWarehouseProduct.ProductID = warehouseProduct.ProductID
+		if warehouseProduct.ProductID != 0 {
+			updateData["product_id"] = warehouseProduct.ProductID
+		}
 
-		return w.db.WithContext(ctx).Save(&existingWarehouseProduct).Error
+		// ❗ Jangan update warehouse_id kalau 0
+		if warehouseProduct.WarehouseID != 0 {
+			updateData["warehouse_id"] = warehouseProduct.WarehouseID
+		}
+
+		return w.db.WithContext(ctx).
+			Model(&model.WarehouseProduct{}).
+			Where("id = ?", warehouseProduct.ID).
+			Updates(updateData).Error
 	}
 }
 

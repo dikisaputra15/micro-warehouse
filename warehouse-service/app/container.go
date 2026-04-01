@@ -6,9 +6,11 @@ import (
 	"micro-warehouse/warehouse-service/controller"
 	"micro-warehouse/warehouse-service/database"
 	"micro-warehouse/warehouse-service/pkg/httpclient"
+	"micro-warehouse/warehouse-service/pkg/redis"
 	"micro-warehouse/warehouse-service/pkg/storage"
 	"micro-warehouse/warehouse-service/repository"
 	"micro-warehouse/warehouse-service/usecase"
+	"time"
 )
 
 type Container struct {
@@ -24,13 +26,15 @@ func BuildContainer() *Container {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 	
+	productClient := httpclient.NewProductClient(*config)
+	redisClient := redis.NewRedisClient(*config)
+	cachedProductClient := httpclient.NewCachedProductClient(productClient, redisClient, 1*time.Hour)
 	warehouseRepo := repository.NewWarehouseRepository(db.DB)
 	warehouseUsecase := usecase.NewWarehouseUsecase(warehouseRepo)
 	warehouseController := controller.NewWarehouseController(warehouseUsecase)
 
 	warehouseProductRepo := repository.NewWarehouseProductRepository(db.DB)
-	productClient := httpclient.NewProductClient(*config)
-	warehouseProductUsecase := usecase.NewWarehouseProductUsecase(warehouseProductRepo, productClient)
+	warehouseProductUsecase := usecase.NewWarehouseProductUsecase(warehouseProductRepo, cachedProductClient)
 	warehouseProductController := controller.NewWarehouseProductController(warehouseProductUsecase)
 
 	supabaseStorage := storage.NewSupabaseStorage(*config)
