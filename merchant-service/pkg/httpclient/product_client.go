@@ -15,13 +15,52 @@ import (
 
 type ProductClientInterface interface {
 	GetProductByID(ctx context.Context, productID uint) (*ProductResponse, error)
+	GetProductByBarcode(ctx context.Context, barcode string) (*ProductResponse, error)
 	GetProducts(ctx context.Context, page, limit int, search, sortBy, sortOrder string) ([]ProductResponse, error)
 	HealthCheck(ctx context.Context) error
 }
 
 type ProductClient struct {
 	urlProductService string
-	httpClient *http.Client
+	httpClient        *http.Client
+}
+
+// GetProductByBarcode implements ProductClientInterface.
+func (p *ProductClient) GetProductByBarcode(ctx context.Context, barcode string) (*ProductResponse, error) {
+	url := fmt.Sprintf("%s/api/v1/products/barcode/%s", p.urlProductService, barcode)
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		log.Errorf("[ProductClient] GetProductByBarcode - 1: %v", err)
+		return nil, err
+	}
+
+	resp, err := p.httpClient.Do(req)
+	if err != nil {
+		log.Errorf("[ProductClient] GetProductByBarcode - 2: %v", err)
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Errorf("[ProductClient] GetProductByBarcode - 3: %v", err)
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		log.Errorf("[ProductClient] GetProductByBarcode - 4: %s", string(body))
+		return nil, errors.New("Failed to get product by id")
+	}
+
+	var productResponse ProductServiceResponse
+	if err := json.Unmarshal(body, &productResponse); err != nil {
+		log.Errorf("[ProductClient] GetProductByBarcode - 5: %v", err)
+		return nil, err
+	}
+
+	return &productResponse.Data, nil
 }
 
 // GetProductByID implements ProductClientInterface.
@@ -130,7 +169,7 @@ type ProductResponse struct {
 	Name      string `json:"name"`
 	About     string `json:"about"`
 	Price     int64  `json:"price"`
-	Barcode string `json:"barcode"`
+	Barcode   string `json:"barcode"`
 	Thumbnail string `json:"thumbnail"`
 	Category  struct {
 		ID    uint   `json:"id"`
