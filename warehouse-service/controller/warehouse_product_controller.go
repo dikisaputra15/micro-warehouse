@@ -281,19 +281,12 @@ func (w *warehouseProductController) GetWarehouseProductByWarehouseIDAndProductI
 // UpdateWarehouseProduct implements WarehouseProductControllerInterface.
 func (w *warehouseProductController) UpdateWarehouseProduct(c *fiber.Ctx) error {
 	ctx := c.Context()
-
-	//  ambil ID
 	warehouseProductID := c.Params("warehouse_product_id")
 	warehouseProductIDUint := conv.StringToUint(warehouseProductID)
+	warehouseID := c.Params("warehouse_id")
+	warehouseIDUint := conv.StringToUint(warehouseID)
 
-	if warehouseProductIDUint == 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid warehouse_product_id",
-		})
-	}
-
-	// pakai request khusus update
-	var req request.UpdateWarehouseProductRequest
+	var req request.CreateWarehouseProductRequest
 	if err := c.BodyParser(&req); err != nil {
 		log.Errorf("[WarehouseProductController] UpdateWarehouseProduct -1: %v", err)
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -301,25 +294,22 @@ func (w *warehouseProductController) UpdateWarehouseProduct(c *fiber.Ctx) error 
 		})
 	}
 
-	// tidak perlu validator required (karena optional field)
+	if err := validator.Validate(req); err != nil {
+		log.Errorf("[WarehouseProductController] UpdateWarehouseProduct -2: %v", err)
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": err.Error(),
+		})
+	}
 
-	// mapping model (hanya set jika ada)
 	reqModel := model.WarehouseProduct{
 		ID: warehouseProductIDUint,
+		WarehouseID: warehouseIDUint,
+		ProductID: req.ProductID,
+		Stock: req.Stock,
 	}
-
-	if req.ProductID != nil {
-		reqModel.ProductID = *req.ProductID
-	}
-
-	if req.Stock != nil {
-		reqModel.Stock = *req.Stock
-	}
-
-	// JANGAN set WarehouseID di sini
 
 	if err := w.warehouseProductUsecase.UpdateWarehouseProduct(ctx, &reqModel); err != nil {
-		log.Errorf("[WarehouseProductController] UpdateWarehouseProduct -3: %v", err)
+		log.Errorf("[WarehouseController] UpdateWarehouse -3: %v", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to update warehouse product",
 		})

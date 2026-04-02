@@ -1,9 +1,13 @@
 package rabbitmq
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"micro-warehouse/warehouse-service/repository"
 
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/streadway/amqp"
 )
 
@@ -82,4 +86,69 @@ func NewRabbitMQConsumer(rabbitMQURL string, repo repository.WarehouseProductRep
 		channel: ch,
 		repo: repo,
 	}, nil
+}
+
+func (rc *RabbitMQConsumer) StartConsuming(ctx context.Context) error {
+	msgs, err := rc.channel.Consume(
+		QueueName,
+		"",
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to consume messages: %w", err)
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				log.Infof("[RabbitMQConsumer] Stopping Consumer due to context cancellation")
+				return
+			case msg := <-msgs:
+				rc.handleMessage(ctx, msg)
+			}
+		}
+	}()
+
+	return nil
+} 
+
+func (rc *RabbitMQConsumer) handleMessage(ctx context.Context, msg amqp.Delivery) {
+	var event StockReductionEvent
+	if err := json.Unmarshal(msg.Body, &event); err != nil {
+		log.Errorf("[RabbitMQConsumer] handleMessage - 1: %v", err)
+		return
+	}
+
+	if err := rc.processStockReduction(ctx, event); err != nil {
+		log.Errorf("[RabbitMQConsumer] handleMessage - 2: %v", err)
+		return
+	}
+
+	msg.Ack(false)
+}
+
+func (rc *RabbitMQConsumer) processStockReduction(ctx context.Context, event StockReductionEvent) error {
+	warehouseProduct, err := rc.repo.GetWarehouseProductByWarehouseIDAndProductID(ctx, event.WarehouseID, event.ProductID)
+	if err != nil {
+		log.Errorf("[RabbitMQConsumer] processStockReduction - 1: %v", err)
+		return err
+	}
+
+	newStock := warehouseProduct.Stock - int(event.Stock)
+	if newStock < 0 {
+		return errors.New("Stock not enough")
+	}
+
+	warehouseProduct.Stock = newStock
+	if err := rc.repo.UpdateWarehouseProduct(ctx, warehouseProduct); err != nil {
+		log.Errorf("[RabbitMQConsumer] processStockReduction - 2: %v", err)
+	}
+
+	return nil
 }

@@ -35,6 +35,15 @@ func RunServer() {
 	container := BuildContainer()
 	SetupRoutes(app, container)
 
+	if container.RabbitMQConsumer != nil {
+		ctx := context.Background()
+		if err := container.RabbitMQConsumer.StartConsuming(ctx); err != nil {
+			log.Errorf("Failed to start rabbitmq consumer: %v", err)
+		} else {
+			log.Errorf("RabbitMQ consumer started successfully")
+		}
+	}
+
 	port := cfg.App.AppPort
 	if port == "" {
 		port = os.Getenv("APP_PORT")
