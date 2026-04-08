@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"encoding/json"
 	"micro-warehouse/merchant-service/repository"
 	"time"
 
@@ -104,3 +105,25 @@ func (s *StockConsumer) ConsumereStockReductionEvents(ctx context.Context) error
 		log.Errorf("[StockConsumer] ConsumereStockReductionEvents - 1: %v", err)
 		return err
 	}
+
+	for {
+		select {
+			case <-ctx.Done():
+				log.Info("Stoping stock consumer ...")
+				return nil
+			case msg := <-msgs:
+				go sc.handle
+		}
+	}
+
+}
+
+func (sc *StockConsumer) handleStockReductionEvent(msg amqp.Delivery) error {
+	defer msg.Ack(false)
+
+	var event StockReducedEvent
+	if err := json.Unmarshal(msg.Body, &event); err != nil {
+		log.Errorf("[StockConsumer] handleStockReductionEvent - 1: %v", err)
+		return err
+	}
+} 
