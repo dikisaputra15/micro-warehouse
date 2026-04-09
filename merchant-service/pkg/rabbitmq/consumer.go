@@ -1,6 +1,7 @@
 package rabbitmq
 
 import (
+	"context"
 	"encoding/json"
 	"micro-warehouse/merchant-service/repository"
 	"time"
@@ -24,10 +25,10 @@ type StockReductionEventProduct struct {
 type StockConsumer struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
-	merchantRepo repository.MerchantRepositoryInterface
+	merchantRepo repository.MerchantProductRepositoryInterface
 }
 
-func NewStockConsumer(url string, merchantRepo repository.MerchantRepositoryInterface) *StockConsumer {
+func NewStockConsumer(url string, merchantRepo repository.MerchantProductRepositoryInterface) *StockConsumer {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		log.Errorf("[StockConsumer] NewStockConsumer - 1: %v", err)
@@ -112,7 +113,7 @@ func (s *StockConsumer) ConsumereStockReductionEvents(ctx context.Context) error
 				log.Info("Stoping stock consumer ...")
 				return nil
 			case msg := <-msgs:
-				go sc.handle
+				go s.handleStockReductionEvent(msg)
 		}
 	}
 
@@ -126,4 +127,34 @@ func (sc *StockConsumer) handleStockReductionEvent(msg amqp.Delivery) error {
 		log.Errorf("[StockConsumer] handleStockReductionEvent - 1: %v", err)
 		return err
 	}
+
+	for _, product := range event.Products {
+		if err := sc.reduceStock(event.MerchantID, product.ProductID, product.Quantity); err != nil {
+			log.Errorf("[StockConsumer] handleStockReductionEvent - 2: %v", err)
+			continue
+		}
+
+		log.Infof("Successfully reduced stock for product %d by %d", product.ProductID, product.Quantity)
+	}
+
+	return nil
 } 
+
+func (sc *StockConsumer) reduceStock(merchantID uint, productID uint, quantity int) error {
+	err := sc.merchantRepo.ReduceStock(context.Background(), merchantID, productID, int64(quantity))
+	if err != nil {
+		log.Errorf("[StockConsumer] reduceStock - 1: %v", err)
+		return err
+	}
+	return nil
+}
+
+func (sc *StockConsumer) Close() error {
+	if sc.ch != nil {
+		sc.ch.Close()
+	}
+	if sc.conn != nil {
+		return sc.conn.Close()
+	}
+	return nil
+}
