@@ -25,6 +25,8 @@ type MerchantProduct struct {
 	ProductAbout string    `json:"product_about"`
 	ProductPhoto string    `json:"product_photo"`
 	ProductPrice int       `json:"product_price"`
+	ProductCategory string    `json:"product_category"`
+	ProductCategoryPhoto string    `json:"product_category_photo"`
 	Stock       int       `json:"stock"`
 	WarehouseID uint      `json:"warehouse_id"`
 	WarehouseName string    `json:"warehouse_name"`

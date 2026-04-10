@@ -21,7 +21,7 @@ type MerchantWithProductResponse struct {
 	Phone            string                    `json:"phone"`
 	KeeperID         uint                      `json:"keeper_id"`
 	KeeperName       string                    `json:"keeper_name"`
-	MerchantProducts []MerchantProductResponse `json:"merchant_products"`
+	MerchantProducts []MerchantProduct `json:"merchant_products"`
 }
 
 type MerchantPaginationResponse struct {

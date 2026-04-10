@@ -15,4 +15,5 @@ type GetMerchantProductRequest struct {
 	SortOrder  string `query:"sort_order" validate:"omitempty,oneof=asc desc"`
 	MerchantID uint   `query:"merchant_id" validate:"omitempty"`
 	ProductID  uint   `query:"product_id" validate:"omitempty"`
+	KeeperID   uint   `query:"keeper_id" validate:"omitempty"`
 }
