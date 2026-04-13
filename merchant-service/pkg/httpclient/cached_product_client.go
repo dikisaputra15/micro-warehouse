@@ -15,7 +15,7 @@ type CachedProductClient struct {
 	ttl time.Duration
 }
 
-func NewCachedProductClient(productClient ProductClientInterface, redisClient *redis.RedisClient, ttl time.Duration) *CachedProductClient {
+func NewCachedProductClient(productClient ProductClientInterface, redisClient *redis.RedisClient) *CachedProductClient {
 	return &CachedProductClient{
 		client: productClient,
 		redis: redisClient,
