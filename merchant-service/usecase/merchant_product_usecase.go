@@ -172,7 +172,7 @@ func (m *merchantProductUsecase) UpdateMerchantProduct(ctx context.Context, merc
 	return m.merchantProductRepo.UpdateMerchantProduct(ctx, merchantProduct)
 }
 
-func NewMerchantProductUsecaseParams(merchantProductRepo repository.MerchantProductRepositoryInterface, productClient httpclient.ProductClientInterface, warehouseClient httpclient.WarehouseClientInterface, rabbitMQService *rabbitmq.RabbitMQService) MerchantProductUsecaseInterface {
+func NewMerchantProductUsecase(merchantProductRepo repository.MerchantProductRepositoryInterface, productClient httpclient.ProductClientInterface, warehouseClient httpclient.WarehouseClientInterface, rabbitMQService *rabbitmq.RabbitMQService) MerchantProductUsecaseInterface {
 	return &merchantProductUsecase{
 		merchantProductRepo: merchantProductRepo,
 		productClient:       productClient,

@@ -38,7 +38,7 @@ func (h *FileUploadHelper) UploadPhoto(ctx context.Context, file *multipart.File
 func (h *FileUploadHelper) validateImageFile(file *multipart.FileHeader) error {
 
 	if file.Size > MaxImageSize {
-		return fmt.Errorf("file size max 2MB")
+		return fmt.Errorf("file size max 5MB")
 	}
 
 	ext := strings.ToLower(filepath.Ext(file.Filename))
