@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/gofiber/fiber/v2 v2.52.12
 	github.com/supabase-community/storage-go v0.8.1
+	gorm.io/gorm v1.25.10
 )
 
 require (
@@ -28,7 +29,6 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
-	gorm.io/gorm v1.25.10 // indirect
 )
 
 require (

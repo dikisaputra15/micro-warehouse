@@ -14,11 +14,11 @@ func SetupRoutes(app *fiber.App, c *Container) {
 
 	merchantProduct := api.Group("/merchant-products")
 	merchantProduct.Post("/", c.MerchantProductController.CreateMerchantProduct)
-	merchantProduct.Get("/:id", c.MerchantProductController.GetMerchanProductByID)
+	merchantProduct.Get("/:merchant_product_id", c.MerchantProductController.GetMerchanProductByID)
 	merchantProduct.Get("/", c.MerchantProductController.GetMerchantProducts)
 	merchantProduct.Get("/barcode/:barcode", c.MerchantProductController.GetMerchantProductByBarcode)
-	merchantProduct.Put("/:id", c.MerchantProductController.UpdateMerchantProduct)
-	merchantProduct.Delete("/:id", c.MerchantProductController.DeleteMerchantProduct)
+	merchantProduct.Put("/:merchant_product_id", c.MerchantProductController.UpdateMerchantProduct)
+	merchantProduct.Delete("/:merchant_product_id", c.MerchantProductController.DeleteMerchantProduct)
 	merchantProduct.Delete("/product/:product_id", c.MerchantProductController.DeleteAllProductMerchantProducts)
 	merchantProduct.Get("/:product_id/total-stock", c.MerchantProductController.GetProductTotalStock)
 
