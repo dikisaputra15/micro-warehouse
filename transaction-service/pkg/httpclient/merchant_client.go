@@ -14,7 +14,7 @@ import (
 )
 
 type WarehouseClientInterface interface {
-	GetWarehouseByID(ctx context.Context, warehouseID uint) (*WarehouseResponse, error)
+	GetMerchantByKeeperID(ctx context.Context, keeperID uint) (*WarehouseResponse, error)
 	GetWarehouseProductStock(ctx context.Context, warehouseID, productID uint) (*WarehouseProductStockResponse, error)
 }
 
@@ -99,31 +99,29 @@ func (w *WarehouseClient) GetWarehouseProductStock(ctx context.Context, warehous
 	return &warehouseProductStockResponse.Data, nil
 }
 
-type WarehouseResponse struct {
+type Merchant struct {
 	ID      uint   `json:"id"`
 	Name    string `json:"name"`
 	Address string `json:"address"`
-	Photo   string `json:"photo"`
 	Phone   string `json:"phone"`
+	KeeperID   string `json:"keeper_id"`
 }
 
-type WarehouseServiceResponse struct {
-	Message string            `json:"message"`
-	Data    WarehouseResponse `json:"data"`
-	Error   string            `json:"error,omitempty"`
-}
-
-type WarehouseProductStockResponse struct {
-	ID		  uint `json:"id"`
-	ProductID uint `json:"product_id"`
-	Stock    int  `json:"stock"`
-	WarehouseID uint `json:"warehouse_id"`
-}
-
-type WarehouseProductStockServiceResponse struct {
-	Message string                             `json:"message"`
-	Data    WarehouseProductStockResponse      `json:"data"`
-	Error   string                             `json:"error,omitempty"`
+type MerchantProduct struct {
+	ID      uint   `json:"id"`
+	MerchantID      uint   `json:"merchant_id"`
+	ProductID      uint   `json:"product_id"`
+	ProductName      string   `json:"product_name"`
+	ProductAbout     string   `json:"product_about"`
+	ProductPhoto     string   `json:"product_photo"`
+	ProductPrice     int   `json:"product_price"`
+	ProductCategory     string   `json:"product_category"`
+	ProductCategoryPhoto     string   `json:"product_category_photo"`
+	Stock     int   `json:"stock"`
+	WarehouseID     uint   `json:"warehouse_id"`
+	WarehouseName    string   `json:"warehouse_name"`
+	WarehousePhoto   string   `json:"warehouse_photo"`
+	WarehousePhone   string   `json:"warehouse_phone"`
 }
 
 func NewWarehouseClient(cfg configs.Config) WarehouseClientInterface {

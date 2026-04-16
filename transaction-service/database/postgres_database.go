@@ -2,8 +2,8 @@ package database
 
 import (
 	"fmt"
-	"micro-warehouse/merchant-service/configs"
-	"micro-warehouse/merchant-service/model"
+	"micro-warehouse/transaction-service/configs"
+	"micro-warehouse/transaction-service/model"
 
 	"github.com/gofiber/fiber/v2/log"
 	"gorm.io/driver/postgres"
@@ -23,7 +23,7 @@ func ConnectionPostgres(cfg configs.Config) (*Postgres, error) {
 		return nil, err
 	}
 
-	db.AutoMigrate(&model.Merchant{}, &model.MerchantProduct{})
+	db.AutoMigrate(&model.Transaction{}, &model.TransactionProduct{})
 	sqlDB, err := db.DB()
 	if err != nil {
 		log.Errorf("[Postgres] ConnectionPostgres -2: %v", err)

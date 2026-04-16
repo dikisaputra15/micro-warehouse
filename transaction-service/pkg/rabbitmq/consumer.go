@@ -3,7 +3,6 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
-	"micro-warehouse/merchant-service/repository"
 	"time"
 
 	"github.com/gofiber/fiber/v2/log"

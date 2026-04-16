@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"micro-warehouse/merchant-service/configs"
+	"micro-warehouse/transaction-service/configs"
 	"net/http"
 	"time"
 
