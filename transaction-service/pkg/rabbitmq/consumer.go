@@ -3,6 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/gofiber/fiber/v2/log"
@@ -24,10 +25,9 @@ type StockReductionEventProduct struct {
 type StockConsumer struct {
 	conn *amqp.Connection
 	ch   *amqp.Channel
-	merchantRepo repository.MerchantProductRepositoryInterface
 }
 
-func NewStockConsumer(url string, merchantRepo repository.MerchantProductRepositoryInterface) (*StockConsumer, error) {
+func NewStockConsumer(url string) (*StockConsumer, error) {
 	conn, err := amqp.Dial(url)
 	if err != nil {
 		log.Errorf("[StockConsumer] NewStockConsumer - 1: %v", err)
@@ -86,65 +86,35 @@ func NewStockConsumer(url string, merchantRepo repository.MerchantProductReposit
 	return &StockConsumer{
 		conn: conn,
 		ch:   ch,
-		merchantRepo: merchantRepo,
 	}, nil
 }
 
-func (s *StockConsumer) ConsumereStockReductionEvents(ctx context.Context) error {
-	msgs, err := s.ch.Consume(
-		"merchant_stock_events",
-		"",
+func (r *RabbitMQService) PublishStockReducedEvent(ctx context.Context, event StockReducedEvent) error {
+	body, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("failed to marshal event: %w", err)
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	err = r.ch.Publish(
+		"business_events",
+		"merchant.stock.reduced",
 		false,
 		false,
-		false,
-		false,
-		nil,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        body,
+			DeliveryMode: amqp.Persistent,
+			Timestamp: time.Now(),
+		},
 	)
 
 	if err != nil {
-		log.Errorf("[StockConsumer] ConsumereStockReductionEvents - 1: %v", err)
-		return err
+		return fmt.Errorf("failed to publish event: %w", err)
 	}
 
-	for {
-		select {
-			case <-ctx.Done():
-				log.Info("Stoping stock consumer ...")
-				return nil
-			case msg := <-msgs:
-				go s.handleStockReductionEvent(msg)
-		}
-	}
-
-}
-
-func (sc *StockConsumer) handleStockReductionEvent(msg amqp.Delivery) error {
-	defer msg.Ack(false)
-
-	var event StockReducedEvent
-	if err := json.Unmarshal(msg.Body, &event); err != nil {
-		log.Errorf("[StockConsumer] handleStockReductionEvent - 1: %v", err)
-		return err
-	}
-
-	for _, product := range event.Products {
-		if err := sc.reduceStock(event.MerchantID, product.ProductID, product.Quantity); err != nil {
-			log.Errorf("[StockConsumer] handleStockReductionEvent - 2: %v", err)
-			continue
-		}
-
-		log.Infof("Successfully reduced stock for product %d by %d", product.ProductID, product.Quantity)
-	}
-
-	return nil
-} 
-
-func (sc *StockConsumer) reduceStock(merchantID uint, productID uint, quantity int) error {
-	err := sc.merchantRepo.ReduceStock(context.Background(), merchantID, productID, int64(quantity))
-	if err != nil {
-		log.Errorf("[StockConsumer] reduceStock - 1: %v", err)
-		return err
-	}
 	return nil
 }
 

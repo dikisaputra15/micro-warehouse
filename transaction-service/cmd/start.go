@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"micro-warehouse/merchant-service/app"
-
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +8,7 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start the HTTP service",
 	Run: func(cmd *cobra.Command, args []string) {
-		app.RunServer()
+		// app.RunServer()
 	},
 }
 

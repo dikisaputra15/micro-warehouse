@@ -66,6 +66,7 @@ type UserResponse struct {
 	Email string `json:"email"`
 	Phone string `json:"phone"`
 	Photo string `json:"photo"`
+	RoleName string `json:"role_name"`
 }
 
 type UserServiceResponse struct {
