@@ -205,7 +205,28 @@ func (t *transactionRepository) UpdatePaymentStatus(ctx context.Context, orderID
 		log.Errorf("[TransactionRepository] UpdatePaymentStatus - 1: %v", ctx.Err())
 		return ctx.Err()
 	default:
+		updates := map[string]interface{}{
+			"payment_status": paymentStatus,
+		}
 
+		if paymentMethod != "" {
+			updates["payment_method"] = paymentMethod
+		}
+		if transactionID != "" {
+			updates["transaction_code"] = transactionID
+		}
+		if fraudStatus != "" {
+			updates["fraud_status"] = fraudStatus
+		}
+
+		err := t.db.WithContext(ctx).Model(&model.Transaction{}).Where("order_id = ?", orderID).Updates(updates).Error
+
+		if err != nil {
+			log.Errorf("[TransactionRepository] UpdatePaymentStatus - 1: %v", err)
+			return err
+		}
+
+		return nil
 	}
 }
 
